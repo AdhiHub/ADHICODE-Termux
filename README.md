@@ -57,5 +57,3 @@ rm -rf ~/ADHICODE ~/.claude/skills
 ```
 
 ---
-
-**Powered by AdhiHub** — adhithyajeyanraj@gmail.com
