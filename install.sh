@@ -218,15 +218,26 @@ echo -e "\033[0;35m  @godcyber++ GOD-CYBER++ transcendent ops\033[0m"
 echo -e "\033[0;36m  @ghost      Total anonymity protocol\033[0m"
 echo ""
 
-# Find engine binary
+# Find engine binary (checked fast, no full fs scan)
 OPCODE="\$(command -v opencode 2>/dev/null)"
-[ -z "\$OPCODE" ] && OPCODE="\$HOME/.opencode/bin/opencode"
-[ ! -x "\$OPCODE" ] && OPCODE="\$(find /data/data/com.termux/files -name "opencode" -type f 2>/dev/null | head -1)"
+[ -z "\$OPCODE" ] && [ -x "\$HOME/.opencode/bin/opencode" ] && OPCODE="\$HOME/.opencode/bin/opencode"
+[ -z "\$OPCODE" ] && [ -x "\$PREFIX/bin/opencode" ] && OPCODE="\$PREFIX/bin/opencode"
+# Last resort: quick scan with 3s timeout
+if [ -z "\$OPCODE" ]; then
+  OPCODE="\$(timeout 3 find /data/data/com.termux/files/usr -name "opencode" -type f 2>/dev/null | head -1)"
+fi
 
 if [ -x "\$OPCODE" ]; then
   exec "\$OPCODE" "\$@"
 else
-  echo -e "\033[0;31mADHICODE engine not found. Re-run install.\033[0m"
+  echo -e "\033[0;31mADHICODE engine not found.\033[0m"
+  echo -e "\033[1;33mChecked locations:\033[0m"
+  echo -e "  \033[0;36m  - PATH: \033[0m\$(command -v opencode 2>/dev/null || echo 'not found')"
+  echo -e "  \033[0;36m  - ~/.opencode/bin/opencode: \033[0m\$([ -f "\$HOME/.opencode/bin/opencode" ] && echo 'exists' || echo 'not found')"
+  echo -e "  \033[0;36m  - \$PREFIX/bin/opencode: \033[0m\$([ -f "\$PREFIX/bin/opencode" ] && echo 'exists' || echo 'not found')"
+  echo ""
+  echo -e "\033[1;33mFix: Re-run the install script:\033[0m"
+  echo -e "  \033[0;32mcurl -sSL https://raw.githubusercontent.com/AdhiHub/ADHICODE-Termux/main/install.sh | bash\033[0m"
   exit 1
 fi
 WRAPPER
