@@ -58,23 +58,42 @@ COMBO="linux-$ARCH"
 
 echo -e "  ${YELLOW}Arch:${NC} $COMBO"
 
-# Get latest version
-VERSION=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
-if [ -z "$VERSION" ]; then
-    echo -e "${RED}  [!] Failed to get latest version${NC}"
-    exit 1
-fi
-echo -e "  ${YELLOW}Version:${NC} $VERSION"
+echo -e "  ${YELLOW}Downloading latest release...${NC}"
 
 FILENAME="opencode-$COMBO.tar.gz"
-URL="https://github.com/anomalyco/opencode/releases/download/v${VERSION}/${FILENAME}"
+URL="https://github.com/anomalyco/opencode/releases/latest/download/${FILENAME}"
 
 TMPDIR="${TMPDIR:-/tmp}/adhicode_install_$$"
 mkdir -p "$TMPDIR"
-curl -# -L -o "$TMPDIR/$FILENAME" "$URL"
+echo -e "  ${YELLOW}Downloading:${NC} $URL"
+HTTP_CODE=$(curl -# -L -o "$TMPDIR/$FILENAME" -w "%{http_code}" "$URL" 2>&1)
+if [ "$HTTP_CODE" != "200" ]; then
+    echo -e "${RED}  [!] Download failed (HTTP $HTTP_CODE). Trying specific version...${NC}"
+    VERSION=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
+    if [ -n "$VERSION" ]; then
+        URL="https://github.com/anomalyco/opencode/releases/download/v${VERSION}/${FILENAME}"
+        echo -e "  ${YELLOW}Retrying:${NC} $URL"
+        HTTP_CODE=$(curl -# -L -o "$TMPDIR/$FILENAME" -w "%{http_code}" "$URL" 2>&1)
+    fi
+    if [ "$HTTP_CODE" != "200" ]; then
+        echo -e "${RED}  [ERROR] Download failed. Check your internet connection.${NC}"
+        exit 1
+    fi
+fi
+
+if [ ! -f "$TMPDIR/$FILENAME" ] || [ ! -s "$TMPDIR/$FILENAME" ]; then
+    echo -e "${RED}  [ERROR] Downloaded file is missing or empty${NC}"
+    exit 1
+fi
 
 echo -e "  ${YELLOW}Extracting...${NC}"
 tar -xzf "$TMPDIR/$FILENAME" -C "$TMPDIR"
+
+if [ ! -f "$TMPDIR/opencode" ]; then
+    echo -e "${RED}  [ERROR] Binary not found in archive${NC}"
+    ls -la "$TMPDIR/"
+    exit 1
+fi
 
 # Install the engine binary (stays as 'opencode' internally, user runs 'adhicode')
 mv "$TMPDIR/opencode" "$INSTALL_DIR/opencode"
