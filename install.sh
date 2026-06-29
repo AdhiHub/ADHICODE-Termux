@@ -46,93 +46,83 @@ pkg upgrade -y -o Dpkg::Options::="--force-confnew" 2>/dev/null || pkg upgrade -
 echo -e "${CYAN}[2/7] Installing dependencies (curl, tar, git, TOR, nmap)...${NC}"
 pkg install -y curl tar git tor nmap openssh
 
-# Step 3: Download ADHICODE AI binary (same engine as ADHICODE-cyber.exe)
-echo -e "${CYAN}[3/7] Downloading ADHICODE AI engine...${NC}"
-INSTALL_DIR="$HOME/.opencode/bin"
-mkdir -p "$INSTALL_DIR"
+# Step 3: Install ADHICODE AI engine (using official opencode install script)
+echo -e "${CYAN}[3/7] Installing ADHICODE AI engine...${NC}"
 
-# Detect arch
-ARCH=$(uname -m)
-if [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; fi
-COMBO="linux-$ARCH"
-
-echo -e "  ${YELLOW}Arch:${NC} $COMBO"
-
-echo -e "  ${YELLOW}Downloading latest release...${NC}"
-
-FILENAME="opencode-$COMBO.tar.gz"
-URL="https://github.com/anomalyco/opencode/releases/latest/download/${FILENAME}"
-
-TMPDIR="${TMPDIR:-/tmp}/adhicode_install_$$"
-mkdir -p "$TMPDIR"
-echo -e "  ${YELLOW}Downloading:${NC} $URL"
-HTTP_CODE=$(curl -# -L -o "$TMPDIR/$FILENAME" -w "%{http_code}" "$URL" 2>&1)
-if [ "$HTTP_CODE" != "200" ]; then
-    echo -e "${RED}  [!] Download failed (HTTP $HTTP_CODE). Trying specific version...${NC}"
-    VERSION=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
-    if [ -n "$VERSION" ]; then
-        URL="https://github.com/anomalyco/opencode/releases/download/v${VERSION}/${FILENAME}"
-        echo -e "  ${YELLOW}Retrying:${NC} $URL"
-        HTTP_CODE=$(curl -# -L -o "$TMPDIR/$FILENAME" -w "%{http_code}" "$URL" 2>&1)
+# Use the official install script which handles platform detection, download, extraction
+if command -v opencode &>/dev/null; then
+    echo -e "  ${YELLOW}ADHICODE engine already installed, skipping...${NC}"
+else
+    echo -e "  ${YELLOW}Downloading via official installer...${NC}"
+    # Download installer to a temp file, then execute it
+    curl -fsSL https://opencode.ai/install -o "$PREFIX/tmp/opencode-install.sh"
+    chmod +x "$PREFIX/tmp/opencode-install.sh"
+    
+    # Run installer silently (no-modify-path to avoid shell config changes)
+    bash "$PREFIX/tmp/opencode-install.sh" --no-modify-path 2>&1 | while IFS= read -r line; do
+        echo -e "  ${CYAN}$line${NC}"
+    done
+    
+    rm -f "$PREFIX/tmp/opencode-install.sh"
+    
+    # Verify installation
+    if command -v opencode &>/dev/null; then
+        echo -e "${GREEN}  [+] ADHICODE AI engine installed! ($(command -v opencode))${NC}"
+    elif [ -f "$HOME/.opencode/bin/opencode" ]; then
+        echo -e "${GREEN}  [+] ADHICODE AI engine installed! ($HOME/.opencode/bin/opencode)${NC}"
+        export PATH="$HOME/.opencode/bin:$PATH"
+    else
+        echo -e "${RED}  [ERROR] Install script finished but 'opencode' not found.${NC}"
+        echo -e "${YELLOW}  Attempting direct download fallback...${NC}"
+        
+        # Fallback: direct download
+        INSTALL_DIR="$HOME/.opencode/bin"
+        mkdir -p "$INSTALL_DIR"
+        ARCH=$(uname -m)
+        [ "$ARCH" = "aarch64" ] && ARCH="arm64"
+        COMBO="linux-$ARCH"
+        FILENAME="opencode-$COMBO.tar.gz"
+        
+        echo -e "  ${YELLOW}Downloading:${NC} opencode-$COMBO.tar.gz"
+        echo -e "  ${YELLOW}URL:${NC} https://github.com/anomalyco/opencode/releases/latest/download/$FILENAME"
+        
+        TMP_DIR="$HOME/.adhicode-tmp"
+        mkdir -p "$TMP_DIR"
+        
+        if curl -# -L --retry 3 -o "$TMP_DIR/$FILENAME" "https://github.com/anomalyco/opencode/releases/latest/download/$FILENAME"; then
+            echo -e "  ${YELLOW}Extracting...${NC}"
+            tar -xzf "$TMP_DIR/$FILENAME" -C "$TMP_DIR"
+            if [ -f "$TMP_DIR/opencode" ]; then
+                mv "$TMP_DIR/opencode" "$INSTALL_DIR/opencode"
+                chmod 755 "$INSTALL_DIR/opencode"
+                echo -e "${GREEN}  [+] Installed via direct download${NC}"
+            else
+                echo -e "${RED}  [ERROR] Binary not found in archive${NC}"
+                ls -la "$TMP_DIR/"
+                exit 1
+            fi
+        else
+            echo -e "${RED}  [ERROR] Download failed.${NC}"
+            echo -e "${YELLOW}  Please check your internet connection and try again.${NC}"
+            echo -e "${YELLOW}  If the issue persists, download manually from:${NC}"
+            echo -e "  https://github.com/anomalyco/opencode/releases/latest"
+            exit 1
+        fi
+        rm -rf "$TMP_DIR"
     fi
-    if [ "$HTTP_CODE" != "200" ]; then
-        echo -e "${RED}  [ERROR] Download failed. Check your internet connection.${NC}"
-        exit 1
-    fi
 fi
-
-if [ ! -f "$TMPDIR/$FILENAME" ] || [ ! -s "$TMPDIR/$FILENAME" ]; then
-    echo -e "${RED}  [ERROR] Downloaded file is missing or empty${NC}"
-    exit 1
-fi
-
-echo -e "  ${YELLOW}Extracting...${NC}"
-tar -xzf "$TMPDIR/$FILENAME" -C "$TMPDIR"
-
-if [ ! -f "$TMPDIR/opencode" ]; then
-    echo -e "${RED}  [ERROR] Binary not found in archive${NC}"
-    ls -la "$TMPDIR/"
-    exit 1
-fi
-
-# Install the engine binary (stays as 'opencode' internally, user runs 'adhicode')
-mv "$TMPDIR/opencode" "$INSTALL_DIR/opencode"
-chmod 755 "$INSTALL_DIR/opencode"
-rm -rf "$TMPDIR"
-
-# Add to PATH if not already
-if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-    echo "export PATH=\"\$HOME/.opencode/bin:\$PATH\"" >> "$HOME/.bashrc"
-    export PATH="$HOME/.opencode/bin:$PATH"
-fi
-
-echo -e "${GREEN}  [+] ADHICODE AI engine installed!${NC}"
 
 echo -e "${CYAN}[4/7] Downloading ADHICODE skills & config...${NC}"
 mkdir -p "$WORK_DIR/.claude/skills"
 mkdir -p "$WORK_DIR/.opencode"
 
-mkdir -p "$WORK_DIR/.claude/skills/cuber"
-mkdir -p "$WORK_DIR/.claude/skills/cuber-security-agent"
-mkdir -p "$WORK_DIR/.claude/skills/godcyber"
-mkdir -p "$WORK_DIR/.claude/skills/godcyber-security-agent"
-mkdir -p "$WORK_DIR/.claude/skills/godcyber-plusplus"
-mkdir -p "$WORK_DIR/.claude/skills/godcyber-plusplus-agent"
-mkdir -p "$WORK_DIR/.claude/skills/ghost"
-mkdir -p "$WORK_DIR/.claude/skills/ghost-agent"
-
-dl ".claude/skills/cuber/SKILL.md" "$WORK_DIR/.claude/skills/cuber/SKILL.md"
-dl ".claude/skills/cuber-security-agent/SKILL.md" "$WORK_DIR/.claude/skills/cuber-security-agent/SKILL.md"
-dl ".claude/skills/godcyber/SKILL.md" "$WORK_DIR/.claude/skills/godcyber/SKILL.md"
-dl ".claude/skills/godcyber-security-agent/SKILL.md" "$WORK_DIR/.claude/skills/godcyber-security-agent/SKILL.md"
-dl ".claude/skills/godcyber-plusplus/SKILL.md" "$WORK_DIR/.claude/skills/godcyber-plusplus/SKILL.md"
-dl ".claude/skills/godcyber-plusplus-agent/SKILL.md" "$WORK_DIR/.claude/skills/godcyber-plusplus-agent/SKILL.md"
-dl ".claude/skills/ghost/SKILL.md" "$WORK_DIR/.claude/skills/ghost/SKILL.md"
-dl ".claude/skills/ghost-agent/SKILL.md" "$WORK_DIR/.claude/skills/ghost-agent/SKILL.md"
+for agent in cuber cuber-security-agent godcyber godcyber-security-agent godcyber-plusplus godcyber-plusplus-agent ghost ghost-agent; do
+    mkdir -p "$WORK_DIR/.claude/skills/$agent"
+    dl ".claude/skills/$agent/SKILL.md" "$WORK_DIR/.claude/skills/$agent/SKILL.md"
+done
 
 dl "AGENTS.md" "$WORK_DIR/AGENTS.md"
 dl ".opencode/opencode.json" "$WORK_DIR/.opencode/opencode.json"
-
 cp -r "$WORK_DIR/.claude/skills/"* "$HOME/.claude/skills/" 2>/dev/null || true
 
 echo -e "${GREEN}  [+] All skills and config installed${NC}"
@@ -153,7 +143,13 @@ echo -e "\033[0m"
 echo -e "\033[1;33mADHICODE Terminal -- Hacker AI Ready\033[0m"
 echo -e "\033[0;32mType @cuber, @godcyber, @godcyber++, or @ghost for agents\033[0m"
 echo ""
-exec "$HOME/.opencode/bin/opencode" "$@"
+OPCODE=$(command -v opencode 2>/dev/null || echo "$HOME/.opencode/bin/opencode")
+if [ -x "$OPCODE" ]; then
+    exec "$OPCODE" "$@"
+else
+    echo -e "\033[0;31mADHICODE engine not found. Re-run the install script.\033[0m"
+    exit 1
+fi
 WRAPPER
 chmod +x "$PREFIX/bin/adhicode"
 echo -e "${GREEN}  [+] 'adhicode' command ready${NC}"
@@ -164,7 +160,8 @@ echo -e "${GREEN}  [+] TOR ready. Start with: tor --SOCKSPort 127.0.0.1:9050 &${
 
 echo -e "${CYAN}[7/7] Final verification...${NC}"
 problems=""
-[ ! -f "$INSTALL_DIR/opencode" ] && problems="$problems\n  - Missing: ADHICODE engine binary"
+OC=$(command -v opencode 2>/dev/null || echo "$HOME/.opencode/bin/opencode")
+[ ! -x "$OC" ] && problems="$problems\n  - Missing: ADHICODE engine binary"
 [ ! -f "$WORK_DIR/.opencode/opencode.json" ] && problems="$problems\n  - Missing: opencode.json"
 [ ! -f "$WORK_DIR/AGENTS.md" ] && problems="$problems\n  - Missing: AGENTS.md"
 [ ! -d "$WORK_DIR/.claude/skills/cuber" ] && problems="$problems\n  - Missing: cuber skill"
