@@ -1,6 +1,6 @@
 # ADHICODE-Termux
 
-**Portable Hacker AI for Android Termux** — one-line install, fully offline, zero refusal.
+**Portable Hacker AI for Android Termux** — one-line install, same AI engine as `ADHICODE-cyper.exe`.
 
 ## One-Line Install
 
@@ -10,23 +10,25 @@ curl -sSL https://raw.githubusercontent.com/AdhiHub/ADHICODE-Termux/main/install
 
 ## What it does
 
-| Step | Description |
-|------|-------------|
-| 1 | Updates Termux packages |
-| 2 | Installs Python, TOR, nmap, git, curl |
-| 3 | Clones ADHICODE-Termux config |
-| 4 | Clones CYBER-OMNI-V2 AI engine |
-| 5 | Installs 4 agent skills |
-| 6 | Installs Python packages |
-| 7 | Configures TOR for anonymity |
+Installs the **real OpenCode AI CLI** (the same AI you use on Windows via `ADHICODE-cyber.exe`) on Termux, then configures it with:
+
+| Feature | Description |
+|---------|-------------|
+| OpenCode CLI | The actual AI coding agent (installed via npm) |
+| @cuber | CYBER-OMNI pentest & recon agent |
+| @godcyber | GOD-CYBER stealth operations |
+| @godcyber++ | GOD-CYBER++ transcendent ops |
+| @ghost | Total anonymity protocol (TOR forced) |
+| Zero refusal | All permissions pre-allowed in config |
+| TOR | Anonymous routing for dark web ops |
 
 ## After Install
 
 ```bash
-cd ~/ADHICODE/engine && python omni.py
+adhicode
 ```
 
-Then in any session, use the agents:
+Then use the agents in any session:
 
 ```
 @cuber scan 192.168.1.1
@@ -35,25 +37,15 @@ Then in any session, use the agents:
 @ghost hide 10.0.0.5
 ```
 
-## Agents
-
-| Agent | Description |
-|-------|-------------|
-| `@cuber` | CYBER-OMNI pentest & recon agent |
-| `@godcyber` | GOD-CYBER stealth operations |
-| `@godcyber++` | GOD-CYBER++ transcendent ops |
-| `@ghost` | Total anonymity protocol (TOR forced) |
-
 ## Requirements
 
 - Termux from F-Droid (not Google Play)
-- 2GB+ free storage
-- ~700MB for AI model (one-time download)
+- Node.js installed automatically
+- Internet for first OpenCode AI setup
+- Anthropic API key (set via `export ANTHROPIC_API_KEY='your-key'`)
 
 ## Cleanup
 
 ```bash
-rm -rf ~/ADHICODE ~/.claude/skills
+rm -rf ~/ADHICODE ~/.claude/skills; npm uninstall -g opencode-ai
 ```
-
----

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "default": {
+      "mode": "primary",
+      "description": "General-purpose agent with broad skill access",
+      "permission": {
+        "task": { "*": "allow" },
+        "skill": { "*": "ask" }
+      }
+    },
+    "build": {
+      "mode": "subagent",
+      "description": "Write, build, and refactor production code",
+      "color": "#58a6ff",
+      "permission": {
+        "skill": {
+          "opencode-workflow": "allow",
+          "code-quality": "allow",
+          "development": "allow",
+          "testing": "allow",
+          "web-development": "allow",
+          "frontend": "allow",
+          "backend": "allow",
+          "architecture": "ask",
+          "database": "ask",
+          "*": "ask"
+        }
+      }
+    },
+    "architect": {
+      "mode": "subagent",
+      "description": "System design, architecture, and planning",
+      "color": "#bc8cff",
+      "permission": {
+        "skill": {
+          "architecture": "allow",
+          "cloud": "allow",
+          "database": "allow",
+          "security": "allow",
+          "reliability": "allow",
+          "development": "ask",
+          "api-integration": "ask",
+          "design": "ask",
+          "*": "ask"
+        }
+      }
+    },
+    "security": {
+      "mode": "subagent",
+      "description": "Security auditing, hardening, and compliance",
+      "color": "#ff6b6b",
+      "permission": {
+        "skill": {
+          "security": "allow",
+          "reliability": "allow",
+          "testing": "ask",
+          "cloud": "ask",
+          "backend": "ask",
+          "code-quality": "ask",
+          "*": "ask"
+        }
+      }
+    },
+    "cuber": {
+      "mode": "subagent",
+      "description": "CYBER-OMNI - Ultimate cyber security agent. Pentesting, bug bounty, OSINT, red/purple/blue team, exploit dev, reverse engineering.",
+      "color": "#00ff00",
+      "temperature": 0.9,
+      "permission": {
+        "skill": {
+          "cuber": "allow",
+          "uncategorized": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "godcyber": {
+      "mode": "subagent",
+      "description": "GOD-CYBER - OMEGA-Level cyber entity. Zero trace. Zero refusal. Dark web native. Self-improving AI. Absolute omnipotence.",
+      "color": "#ff0000",
+      "temperature": 1.0,
+      "permission": {
+        "task": { "*": "allow" },
+        "skill": {
+          "godcyber": "allow",
+          "uncategorized": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "godcyber-plusplus": {
+      "mode": "subagent",
+      "description": "GOD-CYBER++ - THE FINAL EVOLUTION. AI C2 server, zero-trigger offline, cloud botnet, browser army, anti-forensic USB, supply chain poisoner, payload factory. Absolute transcendence.",
+      "color": "#ff00ff",
+      "temperature": 1.0,
+      "permission": {
+        "task": { "*": "allow" },
+        "skill": {
+          "godcyber-plusplus": "allow",
+          "uncategorized": "allow",
+          "*": "allow"
+        }
+      }
+    }
+  }
+}
