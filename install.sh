@@ -130,18 +130,18 @@ else
   if [ -z "$ENGINE_BIN" ]; then
     echo -e "  ${Y}[!]${N} Trying direct download..."
     mkdir -p "$HOME/.opencode/bin"
-    local ARCH=$(uname -m); [ "$ARCH" = "aarch64" ] && ARCH="arm64"
-    local FILENAME="opencode-linux-$ARCH.tar.gz"
-    if curl -# -L --retry 3 -o "$PREFIX/tmp/$FILENAME" "https://github.com/anomalyco/opencode/releases/latest/download/$FILENAME"; then
-      tar -xzf "$PREFIX/tmp/$FILENAME" -C "$PREFIX/tmp/"
-      local FOUND=$(find "$PREFIX/tmp/" -name "opencode" -type f 2>/dev/null | head -1)
-      if [ -n "$FOUND" ]; then
-        mv "$FOUND" "$HOME/.opencode/bin/opencode"
+    _ARCH=$(uname -m); [ "$_ARCH" = "aarch64" ] && _ARCH="arm64"
+    _FILENAME="opencode-linux-$_ARCH.tar.gz"
+    if curl -# -L --retry 3 -o "$PREFIX/tmp/$_FILENAME" "https://github.com/anomalyco/opencode/releases/latest/download/$_FILENAME"; then
+      tar -xzf "$PREFIX/tmp/$_FILENAME" -C "$PREFIX/tmp/"
+      _FOUND=$(find "$PREFIX/tmp/" -name "opencode" -type f 2>/dev/null | head -1)
+      if [ -n "$_FOUND" ]; then
+        mv "$_FOUND" "$HOME/.opencode/bin/opencode"
         chmod 755 "$HOME/.opencode/bin/opencode"
         ENGINE_BIN="$HOME/.opencode/bin/opencode"
       fi
     fi
-    rm -f "$PREFIX/tmp/$FILENAME"
+    rm -f "$PREFIX/tmp/$_FILENAME"
   fi
 
   if [ -n "$ENGINE_BIN" ]; then
