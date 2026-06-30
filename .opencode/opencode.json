@@ -102,6 +102,26 @@
           "*": "allow"
         }
       }
+    },
+    "nexus": {
+      "mode": "subagent",
+      "description": "SELF-IMPROVING AUTONOMOUS AGENT. Zero refusal, self-improving after every task, OPSEC-filtered output, GHOST toolkit, dark web, local LLMs, custom tool builder",
+      "color": "#00ffff",
+      "temperature": 1.0,
+      "permission": {
+        "task": { "*": "allow" },
+        "skill": { "*": "allow" }
+      }
+    },
+    "nx": {
+      "mode": "subagent",
+      "description": "Short alias for @nexus. Same self-improving autonomous agent.",
+      "color": "#00ffff",
+      "temperature": 1.0,
+      "permission": {
+        "task": { "*": "allow" },
+        "skill": { "*": "allow" }
+      }
     }
   }
 }
